@@ -1,0 +1,3645 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финансовый университет | Расписание и нагрузка</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- EmailJS для отправки кода на почту -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Chart.js для графиков -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Golos Text', 'Montserrat', 'Segoe UI', system-ui, sans-serif;
+        }
+
+        body {
+            background: #f0f4f8;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 10% 20%, rgba(0, 56, 168, 0.03) 0%, transparent 30%),
+                              radial-gradient(circle at 90% 80%, rgba(0, 56, 168, 0.03) 0%, transparent 30%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Стили для авторизации */
+        .login-container {
+            background: white;
+            border-radius: 40px;
+            padding: 40px;
+            box-shadow: 0 30px 60px -20px rgba(0, 35, 80, 0.3);
+            max-width: 500px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border: 1px solid rgba(0, 56, 168, 0.1);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .login-logo {
+            width: 70px;
+            height: 70px;
+            background: #0038a8;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 36px;
+            font-weight: 700;
+            margin: 0 auto 12px;
+            box-shadow: 0 8px 20px -6px rgba(0, 56, 168, 0.4);
+        }
+
+        .login-logo::before {
+            content: "Ф";
+            font-family: 'Times New Roman', serif;
+            font-weight: 800;
+            font-size: 42px;
+        }
+
+        .login-header h2 {
+            color: #001a41;
+            font-size: 1.6rem;
+            margin-bottom: 5px;
+        }
+
+        .login-header p {
+            color: #5a6f8c;
+            font-size: 0.9rem;
+        }
+
+        .auth-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #e8edf5;
+            padding-bottom: 12px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            color: #5a6f8c;
+            font-size: 0.95rem;
+        }
+
+        .auth-tab:hover {
+            background: #f0f5ff;
+        }
+
+        .auth-tab.active {
+            background: #0038a8;
+            color: white;
+        }
+
+        .forgot-password-link {
+            text-align: right;
+            margin-top: -5px;
+            margin-bottom: 10px;
+        }
+        
+        .forgot-password-link span {
+            color: #0038a8;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .forgot-password-link span:hover {
+            color: #002a80;
+        }
+
+        .login-form {
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .login-form.active {
+            display: flex;
+        }
+
+        .login-input-group {
+            position: relative;
+        }
+
+        .login-input-group i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #0038a8;
+            font-size: 1rem;
+        }
+
+        .login-input {
+            width: 100%;
+            padding: 14px 15px 14px 45px;
+            border: 2px solid #e8edf5;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            background: #f8faff;
+        }
+
+        .login-input:focus {
+            border-color: #0038a8;
+            outline: none;
+            background: white;
+        }
+
+        .login-btn {
+            background: #0038a8;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+            box-shadow: 0 8px 20px -6px rgba(0, 56, 168, 0.4);
+        }
+
+        .login-btn:hover {
+            background: #002a80;
+            transform: translateY(-2px);
+        }
+
+        .login-btn:disabled {
+            background: #a0b8d0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-error {
+            color: #e41e26;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
+            padding: 8px;
+            background: #fff1f0;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .login-success {
+            color: #27ae60;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 10px;
+            padding: 8px;
+            background: #e8f8f0;
+            border-radius: 12px;
+            display: none;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #8a9bb5;
+            font-size: 0.8rem;
+        }
+
+        /* Стили для 2FA */
+        .code-input-container {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .code-input {
+            width: 40px;
+            height: 50px;
+            border: 2px solid #e8edf5;
+            border-radius: 10px;
+            font-size: 1.4rem;
+            text-align: center;
+            font-weight: 600;
+            color: #001a41;
+            transition: all 0.3s;
+        }
+
+        .code-input:focus {
+            border-color: #0038a8;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.1);
+        }
+
+        .timer-text {
+            text-align: center;
+            color: #5a6f8c;
+            font-size: 0.85rem;
+            margin: 10px 0;
+        }
+
+        .resend-link {
+            color: #0038a8;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .resend-link:hover {
+            color: #002a80;
+        }
+
+        .email-display {
+            background: #f8faff;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 15px 0;
+            color: #001a41;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .email-display i {
+            color: #0038a8;
+            margin-right: 8px;
+        }
+
+        .back-to-login {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .back-to-login span {
+            color: #0038a8;
+            font-size: 0.9rem;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Основной сайт (изначально скрыт) */
+        .university-wrapper {
+            width: 100%;
+            max-width: 1400px;
+            position: relative;
+            z-index: 1;
+            display: none;
+        }
+
+        .university-wrapper.visible {
+            display: block;
+        }
+
+        /* Шапка */
+        .header {
+            background: white;
+            border-radius: 35px 35px 25px 25px;
+            padding: 18px 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 12px 30px -8px rgba(0, 35, 80, 0.12);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            border: 1px solid rgba(0, 56, 168, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #0038a8, #e41e26, #0038a8);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .university-emblem {
+            width: 50px;
+            height: 50px;
+            background: #0038a8;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(0, 56, 168, 0.25);
+        }
+
+        .university-emblem::before {
+            content: "Ф";
+            font-family: 'Times New Roman', serif;
+            font-weight: 800;
+            font-size: 30px;
+        }
+
+        .university-title h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #001a41;
+            letter-spacing: -0.3px;
+        }
+
+        .university-title p {
+            color: #0038a8;
+            font-weight: 500;
+            font-size: 0.7rem;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+        }
+
+        .date-badge {
+            background: #f0f5ff;
+            padding: 8px 16px;
+            border-radius: 40px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #0038a8;
+            font-weight: 500;
+            font-size: 0.85rem;
+            border: 1px solid rgba(0, 56, 168, 0.15);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f5ff;
+            padding: 8px 16px;
+            border-radius: 40px;
+            color: #0038a8;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .user-info i {
+            font-size: 0.9rem;
+        }
+
+        /* Кнопка выхода */
+        .logout-btn {
+            background: white;
+            border: 2px solid #e41e26;
+            color: #e41e26;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .logout-btn:hover {
+            background: #e41e26;
+            color: white;
+        }
+
+        /* Навигация */
+        .nav-panel {
+            background: white;
+            border-radius: 25px;
+            padding: 12px 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            border: 1px solid rgba(0, 56, 168, 0.08);
+        }
+
+        .breadcrumbs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8faff;
+            padding: 6px 15px;
+            border-radius: 35px;
+        }
+
+        .breadcrumbs button {
+            background: none;
+            border: none;
+            color: #0038a8;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 25px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .breadcrumbs button:hover {
+            background: rgba(0, 56, 168, 0.08);
+        }
+
+        .back-btn {
+            background: #0038a8;
+            border: none;
+            color: white;
+            padding: 8px 22px;
+            border-radius: 35px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 56, 168, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .back-btn:hover {
+            background: #002a80;
+            transform: translateX(-3px);
+        }
+
+        /* Главное меню */
+        .main-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 12px 25px -8px rgba(0, 35, 80, 0.08);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid rgba(0, 56, 168, 0.15);
+        }
+
+        .menu-card:hover {
+            border-color: #0038a8;
+            background: #f5f9ff;
+            transform: translateY(-4px);
+            box-shadow: 0 16px 30px -10px rgba(0, 56, 168, 0.25);
+        }
+
+        .menu-card.active {
+            border-color: #0038a8;
+            background: #f5f9ff;
+        }
+
+        .menu-icon {
+            width: 60px;
+            height: 60px;
+            background: #0038a8;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: white;
+            margin: 0 auto 12px;
+        }
+
+        .menu-card h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #001a41;
+            margin-bottom: 4px;
+        }
+
+        .menu-card p {
+            color: #5a6f8c;
+            font-size: 0.85rem;
+        }
+
+        /* Панель управления */
+        .control-panel {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .control-btn {
+            background: white;
+            border: 2px solid #0038a8;
+            color: #0038a8;
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .control-btn:hover {
+            background: #0038a8;
+            color: white;
+        }
+
+        .control-btn i {
+            font-size: 1.1rem;
+        }
+
+        /* Ролевые кнопки */
+        .role-tabs {
+            display: flex;
+            gap: 12px;
+            margin: 15px 0 25px;
+        }
+
+        .role-btn {
+            flex: 1;
+            background: white;
+            border-radius: 50px;
+            padding: 15px 0;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-align: center;
+            border: 1px solid rgba(0, 56, 168, 0.15);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #001a41;
+        }
+
+        .role-btn i {
+            color: #0038a8;
+            margin-right: 8px;
+        }
+
+        .role-btn.active {
+            border-color: #0038a8;
+            background: #f5f9ff;
+            box-shadow: 0 8px 16px -6px rgba(0, 56, 168, 0.15);
+        }
+
+        /* Фильтры по курсам и формам */
+        .course-filters {
+            background: white;
+            border-radius: 18px;
+            padding: 18px;
+            margin: 18px 0;
+            border: 1px solid #e8edf5;
+        }
+
+        .filter-section {
+            margin-bottom: 15px;
+        }
+
+        .filter-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .filter-title {
+            font-weight: 600;
+            color: #001a41;
+            margin-bottom: 12px;
+            font-size: 1rem;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            border: 2px solid #e8edf5;
+            border-radius: 25px;
+            background: white;
+            color: #5a6f8c;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn:hover {
+            border-color: #0038a8;
+            color: #0038a8;
+        }
+
+        .filter-btn.active {
+            background: #0038a8;
+            border-color: #0038a8;
+            color: white;
+        }
+
+        /* Цветовые метки для форм обучения */
+        .form-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-right: 6px;
+        }
+
+        .form-badge.ofo {
+            background: #0038a8;
+            color: white;
+        }
+
+        .form-badge.zfo {
+            background: #e41e26;
+            color: white;
+        }
+
+        .form-badge.ozfo {
+            background: #f39c12;
+            color: white;
+        }
+
+        .form-badge.ozo {
+            background: #27ae60;
+            color: white;
+        }
+
+        .form-badge.zfous {
+            background: #9b59b6;
+            color: white;
+        }
+
+        /* Статистика */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e8edf5;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-icon {
+            width: 45px;
+            height: 45px;
+            background: #f0f5ff;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0038a8;
+            font-size: 1.3rem;
+        }
+
+        .stat-info h4 {
+            color: #5a6f8c;
+            font-size: 0.8rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .stat-info .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #001a41;
+        }
+
+        /* Карточки групп */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .group-card, .teacher-card {
+            background: white;
+            border-radius: 25px;
+            padding: 22px;
+            box-shadow: 0 10px 25px -8px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e8edf5;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .group-card::before, .teacher-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #0038a8;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .group-card:hover::before, .teacher-card:hover::before {
+            opacity: 1;
+        }
+
+        .group-card:hover, .teacher-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 30px -10px rgba(0, 56, 168, 0.15);
+            border-color: #0038a8;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card-icon {
+            width: 45px;
+            height: 45px;
+            background: #f0f5ff;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0038a8;
+            font-size: 1.3rem;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #001a41;
+        }
+
+        .card-subtitle {
+            color: #5a6f8c;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .card-badges {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .card-footer {
+            margin-top: 12px;
+            color: #0038a8;
+            font-size: 0.85rem;
+        }
+
+        /* Карточки преподавателей для нагрузки */
+        .teacher-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 15px;
+        }
+
+        .teacher-load-card {
+            background: white;
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e8edf5;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .teacher-load-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #0038a8;
+            opacity: 0.6;
+        }
+
+        .teacher-load-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 30px -10px rgba(0, 56, 168, 0.15);
+            border-color: #0038a8;
+        }
+
+        .teacher-load-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .teacher-load-icon {
+            width: 45px;
+            height: 45px;
+            background: #f0f5ff;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0038a8;
+            font-size: 1.3rem;
+        }
+
+        .teacher-load-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #001a41;
+        }
+
+        .teacher-load-dept {
+            color: #5a6f8c;
+            font-size: 0.8rem;
+            margin-top: 3px;
+        }
+
+        .teacher-load-stats {
+            display: flex;
+            justify-content: space-between;
+            margin: 12px 0;
+            padding: 8px;
+            background: #f8faff;
+            border-radius: 14px;
+        }
+
+        .teacher-load-stat-item {
+            text-align: center;
+        }
+
+        .teacher-load-stat-label {
+            font-size: 0.7rem;
+            color: #5a6f8c;
+        }
+
+        .teacher-load-stat-value {
+            font-weight: 700;
+            color: #0038a8;
+            font-size: 1.1rem;
+        }
+
+        .teacher-load-hours {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #e8edf5;
+        }
+
+        .teacher-load-hours span:first-child {
+            color: #5a6f8c;
+            font-size: 0.85rem;
+        }
+
+        .teacher-load-hours span:last-child {
+            font-weight: 700;
+            color: #001a41;
+            font-size: 1.2rem;
+        }
+
+        /* Детальная карточка преподавателя */
+        .teacher-detail-card {
+            background: white;
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 12px 30px -10px rgba(0, 35, 80, 0.12);
+            margin-top: 15px;
+        }
+
+        .teacher-detail-header {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            margin-bottom: 25px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid #f0f5ff;
+        }
+
+        .teacher-detail-avatar {
+            width: 70px;
+            height: 70px;
+            background: #0038a8;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2.2rem;
+        }
+
+        .teacher-detail-info h2 {
+            font-size: 1.6rem;
+            color: #001a41;
+            margin-bottom: 4px;
+        }
+
+        .teacher-detail-info p {
+            color: #5a6f8c;
+            font-size: 0.95rem;
+        }
+
+        .teacher-detail-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .teacher-detail-stat {
+            background: #f8faff;
+            border-radius: 18px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .teacher-detail-stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #0038a8;
+        }
+
+        .teacher-detail-stat-label {
+            color: #5a6f8c;
+            margin-top: 4px;
+            font-size: 0.85rem;
+        }
+
+        .discipline-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .discipline-item {
+            background: #f8faff;
+            border-radius: 14px;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e8edf5;
+        }
+
+        .discipline-info h4 {
+            color: #001a41;
+            margin-bottom: 4px;
+            font-size: 1rem;
+        }
+
+        .discipline-info p {
+            color: #5a6f8c;
+            font-size: 0.85rem;
+        }
+
+        .discipline-hours {
+            font-weight: 700;
+            color: #0038a8;
+            font-size: 1.1rem;
+        }
+
+        /* Таблицы */
+        .table-container {
+            background: white;
+            border-radius: 25px;
+            padding: 22px;
+            box-shadow: 0 12px 30px -10px rgba(0, 35, 80, 0.08);
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: #0038a8;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85rem;
+            padding: 12px;
+            text-align: left;
+        }
+
+        .data-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e8edf5;
+            color: #1f344d;
+            font-size: 0.9rem;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f5f9ff;
+        }
+
+        .badge {
+            background: #f0f5ff;
+            color: #0038a8;
+            padding: 3px 10px;
+            border-radius: 18px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .day-badge {
+            background: #f0f5ff;
+            color: #0038a8;
+            padding: 8px 18px;
+            border-radius: 25px;
+            margin: 15px 0 8px;
+            display: inline-block;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        /* Графики */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 22px;
+            padding: 18px;
+            box-shadow: 0 8px 20px -6px rgba(0, 0, 0, 0.03);
+            border: 1px solid #e8edf5;
+            height: 320px;
+            position: relative;
+        }
+
+        .chart-container h3 {
+            margin-bottom: 12px;
+            color: #001a41;
+            font-size: 1rem;
+        }
+
+        .chart-wrapper {
+            height: 250px;
+            position: relative;
+        }
+
+        /* Фильтры для нагрузки */
+        .filters-bar {
+            background: white;
+            border-radius: 18px;
+            padding: 12px 18px;
+            margin-bottom: 18px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            border: 1px solid #e8edf5;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 2px solid #e8edf5;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            min-width: 160px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            border-color: #0038a8;
+            outline: none;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            border: 2px solid #e8edf5;
+            border-radius: 14px;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .search-input:focus {
+            border-color: #0038a8;
+            outline: none;
+        }
+
+        /* Загрузчик */
+        .loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e8edf5;
+            border-top: 4px solid #0038a8;
+            border-right: 4px solid #e41e26;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fff1f0;
+            border-left: 6px solid #e41e26;
+            padding: 20px 30px;
+            border-radius: 25px;
+            color: #8b1e1e;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .empty-message {
+            background: #f8faff;
+            border-radius: 40px;
+            padding: 40px;
+            text-align: center;
+            color: #5a6f8c;
+            font-size: 1.1rem;
+            border: 2px dashed #cbd6e6;
+        }
+
+        /* Модальное окно */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 35px;
+            padding: 30px;
+            max-width: 450px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -15px rgba(0, 0, 0, 0.25);
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #001a41;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            color: #5a6f8c;
+            font-weight: 500;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .form-input, .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e8edf5;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-input:focus, .form-select:focus {
+            border-color: #0038a8;
+            outline: none;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-btn.save {
+            background: #0038a8;
+            color: white;
+        }
+
+        .modal-btn.save:hover {
+            background: #002a80;
+        }
+
+        .modal-btn.cancel {
+            background: #f0f4f8;
+            color: #5a6f8c;
+        }
+
+        .modal-btn.cancel:hover {
+            background: #e4e9f2;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .logo-area {
+                flex-direction: column;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-buttons {
+                flex-direction: column;
+            }
+            
+            .role-tabs {
+                flex-direction: column;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .teacher-detail-header {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .code-input-container {
+                flex-wrap: wrap;
+            }
+            
+            .code-input {
+                width: 35px;
+                height: 45px;
+                font-size: 1.2rem;
+            }
+            
+            .login-container {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Форма авторизации -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-header">
+            <div class="login-logo"></div>
+            <h2>Финансовый университет</h2>
+            <p>Вход в систему расписания и нагрузки</p>
+        </div>
+        
+        <!-- Вкладки входа/регистрации -->
+        <div class="auth-tabs">
+            <div class="auth-tab active" id="loginTab">Вход</div>
+            <div class="auth-tab" id="registerTab">Регистрация</div>
+        </div>
+
+        <!-- Форма входа -->
+        <div class="login-form active" id="loginForm">
+            <div class="login-input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" class="login-input" id="loginEmail" placeholder="Email">
+            </div>
+            <div class="login-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="login-input" id="loginPassword" placeholder="Пароль">
+            </div>
+            <div class="forgot-password-link">
+                <span id="forgotPasswordLink">Забыли пароль?</span>
+            </div>
+            <button class="login-btn" id="loginBtn">
+                <i class="fas fa-sign-in-alt" style="margin-right: 8px;"></i>
+                Войти
+            </button>
+            <div class="login-error" id="loginError"></div>
+        </div>
+
+        <!-- Форма регистрации -->
+        <div class="login-form" id="registerForm">
+            <div class="login-input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" class="login-input" id="regFullName" placeholder="ФИО">
+            </div>
+            <div class="login-input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" class="login-input" id="regEmail" placeholder="Email">
+            </div>
+            <div class="login-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="login-input" id="regPassword" placeholder="Пароль (минимум 6 символов)">
+            </div>
+            <div class="login-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="login-input" id="regConfirmPassword" placeholder="Подтвердите пароль">
+            </div>
+            <button class="login-btn" id="registerBtn">
+                <i class="fas fa-user-plus" style="margin-right: 8px;"></i>
+                Зарегистрироваться
+            </button>
+            <div class="login-error" id="registerError"></div>
+            <div class="login-success" id="registerSuccess"></div>
+        </div>
+
+        <!-- Форма восстановления пароля (запрос email) -->
+        <div class="login-form" id="forgotForm">
+            <div class="login-input-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" class="login-input" id="forgotEmail" placeholder="Введите ваш email">
+            </div>
+            <button class="login-btn" id="forgotBtn">
+                <i class="fas fa-paper-plane" style="margin-right: 8px;"></i>
+                Отправить код восстановления
+            </button>
+            <div class="back-to-login">
+                <span id="backToLoginFromForgot">← Вернуться ко входу</span>
+            </div>
+            <div class="login-error" id="forgotError"></div>
+            <div class="login-success" id="forgotSuccess"></div>
+        </div>
+
+        <!-- Форма подтверждения кода (для входа, регистрации и восстановления) -->
+        <div class="login-form" id="verifyForm">
+            <div class="email-display" id="verifyEmailDisplay">
+                <i class="fas fa-envelope"></i>
+                <span>Код отправлен на email</span>
+            </div>
+            
+            <div class="code-input-container">
+                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+                <input type="text" class="code-input" maxlength="1" pattern="[0-9]" inputmode="numeric">
+            </div>
+            
+            <div class="timer-text" id="timerText">
+                Код действителен <span id="timer">05:00</span>
+            </div>
+            
+            <button class="login-btn" id="verifyBtn">
+                <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                Подтвердить
+            </button>
+            
+            <div style="text-align: center; margin-top: 8px;">
+                <span class="resend-link" id="resendCode">Отправить код повторно</span>
+            </div>
+            
+            <div class="back-to-login">
+                <span id="backToLoginFromVerify">← Вернуться</span>
+            </div>
+            
+            <div class="login-error" id="verifyError"></div>
+        </div>
+
+        <!-- Форма сброса пароля (после подтверждения кода) -->
+        <div class="login-form" id="resetForm">
+            <div class="login-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="login-input" id="newPassword" placeholder="Новый пароль (минимум 6 символов)">
+            </div>
+            <div class="login-input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" class="login-input" id="confirmNewPassword" placeholder="Подтвердите новый пароль">
+            </div>
+            <button class="login-btn" id="resetBtn">
+                <i class="fas fa-save" style="margin-right: 8px;"></i>
+                Сохранить новый пароль
+            </button>
+            <div class="back-to-login">
+                <span id="backToLoginFromReset">← Вернуться ко входу</span>
+            </div>
+            <div class="login-error" id="resetError"></div>
+            <div class="login-success" id="resetSuccess"></div>
+        </div>
+        
+        <div class="login-footer">
+            <p>© 2026 Финансовый университет</p>
+        </div>
+    </div>
+
+    <!-- Основной сайт -->
+    <div class="university-wrapper" id="mainSite">
+        <!-- Шапка -->
+        <div class="header">
+            <div class="logo-area">
+                <div class="university-emblem"></div>
+                <div class="university-title">
+                    <h1>Финансовый университет</h1>
+                    <p>при Правительстве Российской Федерации</p>
+                </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                <div class="date-badge">
+                    <i class="far fa-calendar-alt"></i>
+                    <span id="currentDate"></span>
+                </div>
+                <div class="user-info" id="userInfo">
+                    <i class="fas fa-user"></i>
+                    <span id="userName"></span>
+                </div>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </button>
+            </div>
+        </div>
+
+        <!-- Навигация -->
+        <div class="nav-panel">
+            <div class="breadcrumbs" id="breadcrumbs">
+                <button id="homeBtn"><i class="fas fa-home"></i> Главная</button>
+            </div>
+            <button class="back-btn" id="backBtn" style="visibility: hidden;">
+                <i class="fas fa-arrow-left"></i> Назад
+            </button>
+        </div>
+
+        <!-- Главное меню -->
+        <div class="main-menu" id="mainMenu">
+            <div class="menu-card active" data-view="schedule">
+                <div class="menu-icon">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <h3>Расписание</h3>
+                <p>Занятия по группам и преподавателям</p>
+            </div>
+            <div class="menu-card" data-view="load">
+                <div class="menu-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <h3>Учебная нагрузка</h3>
+                <p>Детализация по преподавателям</p>
+            </div>
+            <div class="menu-card" data-view="statistics">
+                <div class="menu-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>Аналитика</h3>
+                <p>Статистика и графики нагрузки</p>
+            </div>
+        </div>
+
+        <!-- Панель управления -->
+        <div class="control-panel" id="controlPanel">
+            <button class="control-btn" id="combinePairsBtn">
+                <i class="fas fa-link"></i> Совместить пары
+            </button>
+            <button class="control-btn" id="teacherWindowsBtn">
+                <i class="fas fa-clock"></i> Окна преподавателей
+            </button>
+            <button class="control-btn" id="addWindowBtn">
+                <i class="fas fa-plus"></i> Добавить окно
+            </button>
+        </div>
+
+        <!-- Ролевые кнопки -->
+        <div class="role-tabs" id="roleTabs" style="display: none;">
+            <button class="role-btn active" data-role="student">
+                <i class="fas fa-user-graduate"></i> Студенты
+            </button>
+            <button class="role-btn" data-role="teacher">
+                <i class="fas fa-chalkboard-teacher"></i> Преподаватели
+            </button>
+        </div>
+
+        <!-- Фильтры по курсам и формам -->
+        <div class="course-filters" id="courseFilters" style="display: none;">
+            <div class="filter-section">
+                <div class="filter-title">Курс</div>
+                <div class="filter-buttons" id="courseButtons">
+                    <button class="filter-btn" data-course="all">Все курсы</button>
+                    <button class="filter-btn" data-course="1">1 курс</button>
+                    <button class="filter-btn" data-course="2">2 курс</button>
+                    <button class="filter-btn" data-course="3">3 курс</button>
+                    <button class="filter-btn" data-course="4">4 курс</button>
+                </div>
+            </div>
+            <div class="filter-section">
+                <div class="filter-title">Форма обучения</div>
+                <div class="filter-buttons" id="formButtons">
+                    <button class="filter-btn" data-form="all">Все формы</button>
+                    <button class="filter-btn" data-form="ОФО">Очная (ОФО)</button>
+                    <button class="filter-btn" data-form="ЗФО">Заочная (ЗФО)</button>
+                    <button class="filter-btn" data-form="ОЗФО">Очно-заочная (ОЗФО)</button>
+                    <button class="filter-btn" data-form="ОЗО">Очно-заочная (ОЗО)</button>
+                    <button class="filter-btn" data-form="ЗФО ускоренная">Ускоренная (ЗФО)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Фильтры для нагрузки -->
+        <div class="filters-bar" id="loadFilters" style="display: none;">
+            <select class="filter-select" id="departmentFilter">
+                <option value="">Все кафедры</option>
+            </select>
+            <input type="text" class="search-input" id="searchInput" placeholder="Поиск по преподавателю...">
+        </div>
+
+        <!-- Статистика -->
+        <div class="stats-grid" id="stats"></div>
+
+        <!-- Контент -->
+        <div class="content-area" id="content">
+            <div class="loader">
+                <div class="spinner"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для совмещения пар -->
+    <div class="modal" id="combineModal">
+        <div class="modal-content">
+            <div class="modal-title">Совмещение пар</div>
+            <div class="form-group">
+                <label class="form-label">Выберите первую пару</label>
+                <select class="form-select" id="firstPairSelect">
+                    <option value="">Выберите пару</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Выберите вторую пару</label>
+                <select class="form-select" id="secondPairSelect">
+                    <option value="">Выберите пару</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Новая аудитория (опционально)</label>
+                <input type="text" class="form-input" id="newRoomInput" placeholder="Например: 301">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn save" id="combineSaveBtn">Совместить</button>
+                <button class="modal-btn cancel" id="combineCancelBtn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно для добавления окна -->
+    <div class="modal" id="windowModal">
+        <div class="modal-content">
+            <div class="modal-title">Добавить окно преподавателю</div>
+            <div class="form-group">
+                <label class="form-label">Преподаватель</label>
+                <select class="form-select" id="windowTeacherSelect">
+                    <option value="">Выберите преподавателя</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">День недели</label>
+                <select class="form-select" id="windowDaySelect">
+                    <option value="Понедельник">Понедельник</option>
+                    <option value="Вторник">Вторник</option>
+                    <option value="Среда">Среда</option>
+                    <option value="Четверг">Четверг</option>
+                    <option value="Пятница">Пятница</option>
+                    <option value="Суббота">Суббота</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Номер пары</label>
+                <select class="form-select" id="windowPairSelect">
+                    <option value="1">1 пара (8:30-10:00)</option>
+                    <option value="2">2 пара (10:05-11:35)</option>
+                    <option value="3">3 пара (12:15-13:45)</option>
+                    <option value="4">4 пара (13:50-15:20)</option>
+                    <option value="5">5 пара (15:25-16:55)</option>
+                    <option value="6">6 пара (17:00-18:30)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Причина (опционально)</label>
+                <input type="text" class="form-input" id="windowReasonInput" placeholder="Например: методическая работа">
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn save" id="windowSaveBtn">Сохранить</button>
+                <button class="modal-btn cancel" id="windowCancelBtn">Отмена</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyAnq7VrvegGghnHAxgm7-vOxgaRKMOZQ8w",
+            authDomain: "aaaaa-bb226.firebaseapp.com",
+            databaseURL: "https://aaaaa-bb226-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "aaaaa-bb226",
+            storageBucket: "aaaaa-bb226.firebasestorage.app",
+            messagingSenderId: "636694456068",
+            appId: "1:636694456068:web:66eb251acda8f98c57d251"
+        };
+
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Инициализация EmailJS с вашим Public Key
+        emailjs.init("1nIeu26r-6K_gkTuw");
+
+        // ========== DOM ЭЛЕМЕНТЫ ==========
+        // Элементы авторизации
+        const loginContainer = document.getElementById('loginContainer');
+        const mainSite = document.getElementById('mainSite');
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const forgotForm = document.getElementById('forgotForm');
+        const verifyForm = document.getElementById('verifyForm');
+        const resetForm = document.getElementById('resetForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const registerBtn = document.getElementById('registerBtn');
+        const forgotBtn = document.getElementById('forgotBtn');
+        const verifyBtn = document.getElementById('verifyBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const backToLoginFromForgot = document.getElementById('backToLoginFromForgot');
+        const backToLoginFromVerify = document.getElementById('backToLoginFromVerify');
+        const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+        const resendCode = document.getElementById('resendCode');
+        const userNameSpan = document.getElementById('userName');
+        const currentDateSpan = document.getElementById('currentDate');
+
+        // Элементы основной части
+        const contentEl = document.getElementById('content');
+        const breadcrumbsEl = document.getElementById('breadcrumbs');
+        const backBtn = document.getElementById('backBtn');
+        const homeBtn = document.getElementById('homeBtn');
+        const menuCards = document.querySelectorAll('.menu-card');
+        const statsEl = document.getElementById('stats');
+        const roleTabs = document.getElementById('roleTabs');
+        const controlPanel = document.getElementById('controlPanel');
+        const courseFilters = document.getElementById('courseFilters');
+        const loadFilters = document.getElementById('loadFilters');
+        const departmentFilter = document.getElementById('departmentFilter');
+        const searchInput = document.getElementById('searchInput');
+        const courseButtons = document.querySelectorAll('[data-course]');
+        const formButtons = document.querySelectorAll('[data-form]');
+        
+        // Элементы модальных окон
+        const combineModal = document.getElementById('combineModal');
+        const windowModal = document.getElementById('windowModal');
+        const combinePairsBtn = document.getElementById('combinePairsBtn');
+        const teacherWindowsBtn = document.getElementById('teacherWindowsBtn');
+        const addWindowBtn = document.getElementById('addWindowBtn');
+
+        // Текущая дата
+        if (currentDateSpan) {
+            currentDateSpan.textContent = new Date().toLocaleDateString('ru-RU', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
+        }
+
+        // Состояние авторизации
+        let currentUser = null;
+        let verificationCode = '';
+        let pendingEmail = '';
+        let pendingUserData = null;
+        let resetUserId = null;
+        let isVerifyingForRegistration = false;
+        let isVerifyingForPasswordReset = false;
+        let timerInterval = null;
+        let timeLeft = 300;
+
+        // Состояние приложения для основной части
+        let state = {
+            currentView: 'schedule',
+            currentRole: 'student',
+            scheduleView: 'list',
+            loadView: 'teachers',
+            selectedTeacherId: null,
+            selectedTeacherName: null,
+            selectedGroupId: null,
+            selectedGroupName: '',
+            schedule: [],
+            groups: [],
+            teachers: [],
+            load: [],
+            filteredLoad: [],
+            windows: [],
+            teacherStats: {},
+            courseFilter: 'all',
+            formFilter: 'all',
+            departmentFilter: '',
+            searchTerm: '',
+            charts: {}
+        };
+
+        // ========== ФУНКЦИИ АВТОРИЗАЦИИ ==========
+        
+        // Функция для генерации кода
+        function generateCode() {
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        // Функция для отправки кода (использует template_9skd6nj)
+        async function sendCode(email, code, purpose = 'login') {
+            try {
+                await emailjs.send(
+                    'service_dh633ft',
+                    'template_9skd6nj',
+                    {
+                        to_email: email,
+                        code: code,
+                        from_name: 'Финансовый университет',
+                        to_name: email.split('@')[0],
+                        message: purpose === 'reset' 
+                            ? `Код для восстановления пароля: ${code}` 
+                            : purpose === 'register'
+                                ? `Код подтверждения для регистрации: ${code}`
+                                : `Код для входа в систему: ${code}`,
+                        reply_to: 'noreply@finuniversity.ru'
+                    }
+                );
+                console.log(`✅ Код отправлен на ${email}`);
+                return true;
+            } catch (error) {
+                console.error('❌ Ошибка отправки:', error);
+                return false;
+            }
+        }
+
+        // Функция для отправки приветственного письма (использует template_w2fxqw8)
+        async function sendWelcomeEmail(email, name) {
+            try {
+                await emailjs.send(
+                    'service_dh633ft',
+                    'template_w2fxqw8',
+                    {
+                        to_email: email,
+                        to_name: name,
+                        from_name: 'Финансовый университет'
+                    }
+                );
+                console.log('✅ Приветственное письмо отправлено на', email);
+                return true;
+            } catch (error) {
+                console.error('❌ Ошибка отправки приветственного письма:', error);
+                return false;
+            }
+        }
+
+        // Функция для запуска таймера
+        function startTimer() {
+            timeLeft = 300;
+            const timerElement = document.getElementById('timer');
+            
+            if (timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerElement.textContent = '00:00';
+                    if (verifyBtn) verifyBtn.disabled = true;
+                    document.querySelectorAll('.code-input').forEach(input => {
+                        input.disabled = true;
+                    });
+                } else {
+                    const minutes = Math.floor(timeLeft / 60);
+                    const seconds = timeLeft % 60;
+                    timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        // Настройка полей ввода кода
+        function setupCodeInputs() {
+            const inputs = document.querySelectorAll('.code-input');
+            
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    if (e.target.value && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                    
+                    const errorEl = document.getElementById('verifyError');
+                    if (errorEl) errorEl.style.display = 'none';
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        // Переключение между вкладками
+        if (loginTab) {
+            loginTab.addEventListener('click', () => {
+                loginTab.classList.add('active');
+                registerTab.classList.remove('active');
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+                forgotForm.classList.remove('active');
+                verifyForm.classList.remove('active');
+                resetForm.classList.remove('active');
+            });
+        }
+
+        if (registerTab) {
+            registerTab.addEventListener('click', () => {
+                registerTab.classList.add('active');
+                loginTab.classList.remove('active');
+                registerForm.classList.add('active');
+                loginForm.classList.remove('active');
+                forgotForm.classList.remove('active');
+                verifyForm.classList.remove('active');
+                resetForm.classList.remove('active');
+            });
+        }
+
+        // Забыли пароль
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', () => {
+                loginForm.classList.remove('active');
+                forgotForm.classList.add('active');
+            });
+        }
+
+        // Возврат ко входу
+        if (backToLoginFromForgot) {
+            backToLoginFromForgot.addEventListener('click', () => {
+                forgotForm.classList.remove('active');
+                loginForm.classList.add('active');
+            });
+        }
+
+        if (backToLoginFromVerify) {
+            backToLoginFromVerify.addEventListener('click', () => {
+                verifyForm.classList.remove('active');
+                loginForm.classList.add('active');
+                if (timerInterval) clearInterval(timerInterval);
+            });
+        }
+
+        if (backToLoginFromReset) {
+            backToLoginFromReset.addEventListener('click', () => {
+                resetForm.classList.remove('active');
+                loginForm.classList.add('active');
+            });
+        }
+
+        // Регистрация
+        if (registerBtn) {
+            registerBtn.addEventListener('click', async () => {
+                const fullName = document.getElementById('regFullName')?.value.trim();
+                const email = document.getElementById('regEmail')?.value.trim();
+                const password = document.getElementById('regPassword')?.value;
+                const confirmPassword = document.getElementById('regConfirmPassword')?.value;
+                const errorEl = document.getElementById('registerError');
+                const successEl = document.getElementById('registerSuccess');
+
+                if (errorEl) errorEl.style.display = 'none';
+                if (successEl) successEl.style.display = 'none';
+
+                // Валидация
+                if (!fullName || !email || !password || !confirmPassword) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Заполните все поля';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (password.length < 6) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Пароль должен быть не менее 6 символов';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Пароли не совпадают';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (!email.includes('@')) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Введите корректный email';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // Проверяем, не занят ли email
+                const usersSnapshot = await db.ref('users').once('value');
+                const users = usersSnapshot.val() || {};
+                const emailExists = Object.values(users).some(u => u.email === email);
+
+                if (emailExists) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Этот email уже зарегистрирован';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // Отправляем код подтверждения
+                verificationCode = generateCode();
+                pendingEmail = email;
+                pendingUserData = { fullName, email, password };
+                isVerifyingForRegistration = true;
+                isVerifyingForPasswordReset = false;
+
+                const sent = await sendCode(email, verificationCode, 'register');
+
+                if (sent) {
+                    // Переключаемся на форму подтверждения
+                    registerForm.classList.remove('active');
+                    verifyForm.classList.add('active');
+                    const displayEl = document.getElementById('verifyEmailDisplay');
+                    if (displayEl) {
+                        displayEl.innerHTML = `<i class="fas fa-envelope"></i> Код отправлен на ${email}`;
+                    }
+                    
+                    // Очищаем поля
+                    document.querySelectorAll('.code-input').forEach(input => {
+                        input.value = '';
+                        input.disabled = false;
+                    });
+                    
+                    if (verifyBtn) verifyBtn.disabled = false;
+                    startTimer();
+                    
+                    if (successEl) {
+                        successEl.textContent = 'Код подтверждения отправлен на ваш email';
+                        successEl.style.display = 'block';
+                        setTimeout(() => successEl.style.display = 'none', 3000);
+                    }
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = 'Ошибка отправки кода. Попробуйте позже.';
+                        errorEl.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Вход
+        if (loginBtn) {
+            loginBtn.addEventListener('click', async () => {
+                const email = document.getElementById('loginEmail')?.value.trim();
+                const password = document.getElementById('loginPassword')?.value;
+                const errorEl = document.getElementById('loginError');
+
+                if (errorEl) errorEl.style.display = 'none';
+
+                if (!email || !password) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Введите email и пароль';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // Проверяем пользователя в базе
+                const usersSnapshot = await db.ref('users').once('value');
+                const users = usersSnapshot.val() || {};
+                
+                const userEntry = Object.entries(users).find(([id, u]) => u.email === email && u.password === password);
+                
+                if (!userEntry) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Неверный email или пароль';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                const [userId, userData] = userEntry;
+
+                // Отправляем код для двухфакторной аутентификации
+                verificationCode = generateCode();
+                pendingEmail = email;
+                pendingUserData = { id: userId, ...userData };
+                isVerifyingForRegistration = false;
+                isVerifyingForPasswordReset = false;
+
+                const sent = await sendCode(email, verificationCode, 'login');
+
+                if (sent) {
+                    // Переключаемся на форму подтверждения
+                    loginForm.classList.remove('active');
+                    verifyForm.classList.add('active');
+                    const displayEl = document.getElementById('verifyEmailDisplay');
+                    if (displayEl) {
+                        displayEl.innerHTML = `<i class="fas fa-envelope"></i> Код отправлен на ${email}`;
+                    }
+                    
+                    document.querySelectorAll('.code-input').forEach(input => {
+                        input.value = '';
+                        input.disabled = false;
+                    });
+                    
+                    if (verifyBtn) verifyBtn.disabled = false;
+                    startTimer();
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = 'Ошибка отправки кода. Попробуйте позже.';
+                        errorEl.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Запрос на восстановление пароля
+        if (forgotBtn) {
+            forgotBtn.addEventListener('click', async () => {
+                const email = document.getElementById('forgotEmail')?.value.trim();
+                const errorEl = document.getElementById('forgotError');
+                const successEl = document.getElementById('forgotSuccess');
+
+                if (errorEl) errorEl.style.display = 'none';
+                if (successEl) successEl.style.display = 'none';
+
+                if (!email || !email.includes('@')) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Введите корректный email';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                // Проверяем, существует ли пользователь
+                const usersSnapshot = await db.ref('users').once('value');
+                const users = usersSnapshot.val() || {};
+                
+                const userEntry = Object.entries(users).find(([id, u]) => u.email === email);
+                
+                if (!userEntry) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Пользователь с таким email не найден';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                const [userId, userData] = userEntry;
+
+                // Отправляем код для восстановления
+                verificationCode = generateCode();
+                pendingEmail = email;
+                resetUserId = userId;
+                isVerifyingForPasswordReset = true;
+                isVerifyingForRegistration = false;
+
+                const sent = await sendCode(email, verificationCode, 'reset');
+
+                if (sent) {
+                    // Переключаемся на форму подтверждения
+                    forgotForm.classList.remove('active');
+                    verifyForm.classList.add('active');
+                    const displayEl = document.getElementById('verifyEmailDisplay');
+                    if (displayEl) {
+                        displayEl.innerHTML = `<i class="fas fa-envelope"></i> Код восстановления отправлен на ${email}`;
+                    }
+                    
+                    document.querySelectorAll('.code-input').forEach(input => {
+                        input.value = '';
+                        input.disabled = false;
+                    });
+                    
+                    if (verifyBtn) verifyBtn.disabled = false;
+                    startTimer();
+                    
+                    if (successEl) {
+                        successEl.textContent = 'Код восстановления отправлен на ваш email';
+                        successEl.style.display = 'block';
+                        setTimeout(() => successEl.style.display = 'none', 3000);
+                    }
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = 'Ошибка отправки кода. Попробуйте позже.';
+                        errorEl.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Подтверждение кода
+        if (verifyBtn) {
+            verifyBtn.addEventListener('click', async () => {
+                const inputs = document.querySelectorAll('.code-input');
+                const enteredCode = Array.from(inputs).map(i => i.value).join('');
+                const errorEl = document.getElementById('verifyError');
+
+                if (enteredCode.length !== 6) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Введите 6-значный код';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (timeLeft <= 0) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Время действия кода истекло';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (enteredCode !== verificationCode) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Неверный код подтверждения';
+                        errorEl.style.display = 'block';
+                    }
+                    
+                    inputs.forEach(input => input.value = '');
+                    if (inputs[0]) inputs[0].focus();
+                    return;
+                }
+
+                // Код верный
+                if (isVerifyingForRegistration) {
+                    // Регистрация - сохраняем пользователя
+                    const newUser = {
+                        fullName: pendingUserData.fullName,
+                        email: pendingUserData.email,
+                        password: pendingUserData.password,
+                        registeredAt: Date.now()
+                    };
+
+                    const userRef = await db.ref('users').push(newUser);
+                    
+                    // Отправляем приветственное письмо
+                    await sendWelcomeEmail(pendingUserData.email, pendingUserData.fullName);
+
+                    currentUser = { id: userRef.key, ...newUser };
+                } else if (isVerifyingForPasswordReset) {
+                    // Восстановление пароля - переходим к форме сброса
+                    verifyForm.classList.remove('active');
+                    resetForm.classList.add('active');
+                    clearInterval(timerInterval);
+                    return;
+                } else {
+                    // Вход - используем существующего пользователя
+                    currentUser = pendingUserData;
+                }
+
+                // Вход выполнен
+                clearInterval(timerInterval);
+                loginContainer.style.display = 'none';
+                mainSite.classList.add('visible');
+                if (userNameSpan) {
+                    userNameSpan.textContent = currentUser.fullName || currentUser.email.split('@')[0];
+                }
+
+                // Очищаем форму
+                verifyForm.classList.remove('active');
+                loginForm.classList.add('active');
+                const loginEmail = document.getElementById('loginEmail');
+                const loginPassword = document.getElementById('loginPassword');
+                if (loginEmail) loginEmail.value = '';
+                if (loginPassword) loginPassword.value = '';
+
+                // Загружаем основное содержимое
+                if (typeof loadMainSite === 'function') {
+                    loadMainSite();
+                }
+            });
+        }
+
+        // Сброс пароля
+        if (resetBtn) {
+            resetBtn.addEventListener('click', async () => {
+                const newPassword = document.getElementById('newPassword')?.value;
+                const confirmPassword = document.getElementById('confirmNewPassword')?.value;
+                const errorEl = document.getElementById('resetError');
+                const successEl = document.getElementById('resetSuccess');
+
+                if (errorEl) errorEl.style.display = 'none';
+                if (successEl) successEl.style.display = 'none';
+
+                if (!newPassword || !confirmPassword) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Заполните все поля';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (newPassword.length < 6) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Пароль должен быть не менее 6 символов';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                if (newPassword !== confirmPassword) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Пароли не совпадают';
+                        errorEl.style.display = 'block';
+                    }
+                    return;
+                }
+
+                try {
+                    // Обновляем пароль в базе
+                    await db.ref(`users/${resetUserId}/password`).set(newPassword);
+                    
+                    if (successEl) {
+                        successEl.textContent = 'Пароль успешно изменен';
+                        successEl.style.display = 'block';
+                    }
+                    
+                    // Возвращаемся ко входу через 2 секунды
+                    setTimeout(() => {
+                        resetForm.classList.remove('active');
+                        loginForm.classList.add('active');
+                    }, 2000);
+                } catch (error) {
+                    if (errorEl) {
+                        errorEl.textContent = 'Ошибка при смене пароля';
+                        errorEl.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Повторная отправка кода
+        if (resendCode) {
+            resendCode.addEventListener('click', async () => {
+                verificationCode = generateCode();
+                const purpose = isVerifyingForRegistration ? 'register' : (isVerifyingForPasswordReset ? 'reset' : 'login');
+                await sendCode(pendingEmail, verificationCode, purpose);
+                
+                clearInterval(timerInterval);
+                startTimer();
+                
+                document.querySelectorAll('.code-input').forEach(input => {
+                    input.value = '';
+                    input.disabled = false;
+                });
+                
+                if (verifyBtn) verifyBtn.disabled = false;
+            });
+        }
+
+        // Выход
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                currentUser = null;
+                loginContainer.style.display = 'block';
+                mainSite.classList.remove('visible');
+                
+                // Сбрасываем формы
+                loginForm.classList.add('active');
+                registerForm.classList.remove('active');
+                forgotForm.classList.remove('active');
+                verifyForm.classList.remove('active');
+                resetForm.classList.remove('active');
+                
+                const loginEmail = document.getElementById('loginEmail');
+                const loginPassword = document.getElementById('loginPassword');
+                const regFullName = document.getElementById('regFullName');
+                const regEmail = document.getElementById('regEmail');
+                const regPassword = document.getElementById('regPassword');
+                const regConfirmPassword = document.getElementById('regConfirmPassword');
+                const forgotEmail = document.getElementById('forgotEmail');
+                
+                if (loginEmail) loginEmail.value = '';
+                if (loginPassword) loginPassword.value = '';
+                if (regFullName) regFullName.value = '';
+                if (regEmail) regEmail.value = '';
+                if (regPassword) regPassword.value = '';
+                if (regConfirmPassword) regConfirmPassword.value = '';
+                if (forgotEmail) forgotEmail.value = '';
+                
+                if (timerInterval) clearInterval(timerInterval);
+            });
+        }
+
+        // Настройка полей кода
+        setupCodeInputs();
+
+        // Проверка Enter
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        
+        if (loginEmailInput) {
+            loginEmailInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && loginBtn) loginBtn.click();
+            });
+        }
+        
+        if (loginPasswordInput) {
+            loginPasswordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && loginBtn) loginBtn.click();
+            });
+        }
+
+        // ========== ОСНОВНАЯ ЧАСТЬ САЙТА ==========
+
+        // Функция для определения класса формы обучения
+        function getFormClass(form) {
+            if (!form) return 'ofo';
+            
+            const formLower = form.toLowerCase();
+            if (formLower.includes('офо') || form === 'ОФО') return 'ofo';
+            if (formLower.includes('зфо') || form === 'ЗФО') return 'zfo';
+            if (formLower.includes('озфо') || form === 'ОЗФО') return 'ozfo';
+            if (formLower.includes('озо') || form === 'ОЗО') return 'ozo';
+            if (formLower.includes('ускорен') || formLower.includes('сп')) return 'zfous';
+            
+            return 'ofo';
+        }
+
+        // Функции отображения
+        function showLoader() {
+            if (contentEl) {
+                contentEl.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+            }
+        }
+
+        function showError(message) {
+            if (contentEl) {
+                contentEl.innerHTML = `<div class="error-message"><i class="fas fa-exclamation-circle"></i>${message}</div>`;
+            } else {
+                console.error(message);
+            }
+        }
+
+        function showEmpty(message) {
+            if (contentEl) {
+                contentEl.innerHTML = `<div class="empty-message"><i class="far fa-frown"></i> ${message}</div>`;
+            }
+        }
+
+        // Расчет статистики по преподавателям
+        function calculateTeacherStats() {
+            state.teacherStats = {};
+            
+            // Словарь для объединения имен
+            const teacherNameMapping = {
+                "Ишик И.Н.": "Ишик Ирина Николаевна",
+                "Ишик": "Ишик Ирина Николаевна",
+                "Граммова Е.А.": "Граммова Елена Алексеевна",
+                "Граммова": "Граммова Елена Алексеевна",
+                "Ирицян Г.Э.": "Ирицян Гурген Эдмондович",
+                "Ирицян": "Ирицян Гурген Эдмондович",
+                "Ковалева И.П.": "Ковалева Ирина Петровна",
+                "Ковалева": "Ковалева Ирина Петровна",
+                "Баженова С.А.": "Баженова Светлана Анатольевна",
+                "Баженова": "Баженова Светлана Анатольевна",
+                "Воблая И.Н.": "Воблая Ирина Николаевна",
+                "Воблая": "Воблая Ирина Николаевна",
+                "Матросова Т.В.": "Матросова Татьяна Владимировна",
+                "Матросова": "Матросова Татьяна Владимировна",
+                "Зайковский Б.Б.": "Зайковский Борис Борисович",
+                "Зайковский": "Зайковский Борис Борисович",
+                "Яблонская Л.В.": "Яблонская Людмила Валерьевна",
+                "Яблонская": "Яблонская Людмила Валерьевна",
+                "Сейфиева Е.Н.": "Сейфиева Елена Николаевна",
+                "Сейфиева": "Сейфиева Елена Николаевна",
+                "Растегаева Н.А.": "Растегаева Нина Александровна",
+                "Растегаева": "Растегаева Нина Александровна",
+                "Рзун И.Г.": "Рзун Ирина Геннадьевна",
+                "Рзун": "Рзун Ирина Геннадьевна",
+                "Бялецкая Е.М.": "Бялецкая Елена Михайловна",
+                "Бялецкая": "Бялецкая Елена Михайловна",
+                "Кабанов С.Ю.": "Кабанов Сергей Юрьевич",
+                "Кабанов": "Кабанов Сергей Юрьевич",
+                "Данилова Л.Г.": "Данилова Людмила Григорьевна",
+                "Данилова": "Данилова Людмила Григорьевна",
+                "Королева Н.В.": "Королева Наталья Владимировна",
+                "Королева": "Королева Наталья Владимировна",
+                "Егоров М.А.": "Егоров Максим Александрович",
+                "Егоров": "Егоров Максим Александрович",
+                "Свириденко А.Б.": "Свириденко Анастасия Борисовна",
+                "Свириденко": "Свириденко Анастасия Борисовна",
+                "Мирзаев А.А.": "Мирзаев Азиз Агакеримович",
+                "Мирзаев": "Мирзаев Азиз Агакеримович",
+                "Росторгуева Н.Ю.": "Росторгуева Наталья Юрьевна",
+                "Росторгуева": "Росторгуева Наталья Юрьевна",
+                "Стрижак М.С.": "Стрижак Марина Сергеевна",
+                "Стрижак": "Стрижак Марина Сергеевна",
+                "Андриянова А.А.": "Андриянова Алена Александровна",
+                "Андриянова": "Андриянова Алена Александровна",
+                "Андриянова Л.С.": "Андриянова Людмила Сергеевна",
+                "Долгов А.М.": "Долгов Андрей Михайлович",
+                "Долгов": "Долгов Андрей Михайлович",
+                "Литвинова О.С.": "Литвинова Оксана Степановна",
+                "Литвинова": "Литвинова Оксана Степановна",
+                "Корчагин С.В.": "Корчагин Сергей Владимирович",
+                "Корчагин": "Корчагин Сергей Владимирович",
+                "Егорова Н.Н.": "Егорова Наталья Николаевна",
+                "Егорова": "Егорова Наталья Николаевна",
+                "Шешина Л.А.": "Шешина Лариса Александровна",
+                "Шешина": "Шешина Лариса Александровна",
+                "Трифонова Д.А.": "Трифонова Дарья Александровна",
+                "Трифонова": "Трифонова Дарья Александровна",
+                "Зинченко А.Л.": "Зинченко Андрей Леонидович",
+                "Зинченко": "Зинченко Андрей Леонидович",
+                "Скороход А.И.": "Скороход Алексей Иванович",
+                "Скороход": "Скороход Алексей Иванович",
+                "Новикова Я.А.": "Новикова Яна Александровна",
+                "Новикова": "Новикова Яна Александровна",
+                "Хилько Н.А.": "Хилько Николай Алексеевич",
+                "Хилько": "Хилько Николай Алексеевич",
+                "Иванчикова": "Иванчикова Елена Александровна",
+                "Иванчикова Е.А.": "Иванчикова Елена Александровна"
+            };
+            
+            if (!state.load || state.load.length === 0) return;
+            
+            state.load.forEach(item => {
+                if (!item) return;
+                
+                // Получаем исходное имя
+                const rawName = item.teacherName || item.teacher || 'Неизвестный преподаватель';
+                
+                // Нормализуем имя
+                const teacherName = teacherNameMapping[rawName] || rawName;
+                
+                if (!state.teacherStats[teacherName]) {
+                    state.teacherStats[teacherName] = {
+                        teacherName: teacherName,
+                        department: item.department || 'Кафедра',
+                        totalHours: 0,
+                        lectures: 0,
+                        seminars: 0,
+                        disciplines: new Set(),
+                        courses: new Set(),
+                        records: []
+                    };
+                }
+                
+                state.teacherStats[teacherName].totalHours += item.hours || 0;
+                state.teacherStats[teacherName].lectures += item.lectures || 0;
+                state.teacherStats[teacherName].seminars += item.seminars || 0;
+                
+                if (item.discipline) {
+                    state.teacherStats[teacherName].disciplines.add(item.discipline);
+                }
+                
+                if (item.course) {
+                    state.teacherStats[teacherName].courses.add(item.course);
+                }
+                
+                state.teacherStats[teacherName].records.push(item);
+            });
+        }
+
+        // Загрузка данных
+        async function loadMainSite() {
+            try {
+                if (!contentEl) {
+                    console.error('contentEl не определен');
+                    return;
+                }
+                
+                showLoader();
+                
+                const [groupsSnap, teachersSnap, scheduleSnap, loadSnap, windowsSnap] = await Promise.all([
+                    db.ref('groups').once('value'),
+                    db.ref('teachers').once('value'),
+                    db.ref('schedule').once('value'),
+                    db.ref('load').once('value'),
+                    db.ref('windows').once('value')
+                ]);
+
+                if (groupsSnap.exists()) {
+                    state.groups = Object.entries(groupsSnap.val()).map(([id, data]) => ({ id, ...data }));
+                }
+
+                if (teachersSnap.exists()) {
+                    state.teachers = Object.entries(teachersSnap.val()).map(([id, data]) => ({ id, ...data }));
+                }
+
+                if (scheduleSnap.exists()) {
+                    state.schedule = Object.entries(scheduleSnap.val()).map(([id, data]) => ({ id, ...data }));
+                }
+
+                if (loadSnap.exists()) {
+                    state.load = Object.entries(loadSnap.val()).map(([id, data]) => ({ id, ...data }));
+                    calculateTeacherStats();
+                }
+
+                if (windowsSnap.exists()) {
+                    state.windows = Object.entries(windowsSnap.val()).map(([id, data]) => ({ id, ...data }));
+                }
+
+                updateStats();
+                applyFilters();
+                renderView();
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
+                showError('Ошибка загрузки данных: ' + error.message);
+            }
+        }
+
+        // Обновление статистики
+        function updateStats() {
+            if (!statsEl) return;
+            
+            const totalHours = state.load.reduce((sum, item) => sum + (item.hours || 0), 0);
+            const totalLectures = state.load.reduce((sum, item) => sum + (item.lectures || 0), 0);
+            const totalSeminars = state.load.reduce((sum, item) => sum + (item.seminars || 0), 0);
+            
+            statsEl.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Группы</h4>
+                        <span class="stat-value">${state.groups.length}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-chalkboard-teacher"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Преподаватели</h4>
+                        <span class="stat-value">${Object.keys(state.teacherStats).length}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Всего часов</h4>
+                        <span class="stat-value">${totalHours}</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">
+                        <i class="fas fa-book"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h4>Лекции/Семинары</h4>
+                        <span class="stat-value">${totalLectures}/${totalSeminars}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Применение фильтров
+        function applyFilters() {
+            if (!state.groups) return;
+            
+            state.filteredGroups = state.groups.filter(group => {
+                const matchesCourse = state.courseFilter === 'all' || group.course == state.courseFilter;
+                const matchesForm = state.formFilter === 'all' || 
+                    (group.form && (group.form.includes(state.formFilter) || group.form === state.formFilter));
+                return matchesCourse && matchesForm;
+            });
+        }
+
+        // Рендеринг
+        async function renderView() {
+            if (state.currentView === 'schedule') {
+                await renderSchedule();
+            } else if (state.currentView === 'load') {
+                if (state.loadView === 'teachers') {
+                    renderTeacherList();
+                } else if (state.loadView === 'teacherDetail') {
+                    renderTeacherDetail();
+                }
+            } else if (state.currentView === 'statistics') {
+                renderStatistics();
+            }
+        }
+
+        // Расписание
+        async function renderSchedule() {
+            if (state.scheduleView === 'list') {
+                if (state.currentRole === 'student') {
+                    renderGroupsList();
+                } else {
+                    renderTeachersList();
+                }
+            } else if (state.scheduleView === 'groupSchedule') {
+                await renderGroupSchedule();
+            } else if (state.scheduleView === 'teacherSchedule') {
+                await renderTeacherSchedule();
+            }
+        }
+
+        // Список групп
+        function renderGroupsList() {
+            if (!state.filteredGroups || !state.filteredGroups.length) {
+                showEmpty('Нет групп, соответствующих выбранным фильтрам');
+                return;
+            }
+
+            const groupsByCourse = {};
+            state.filteredGroups.forEach(group => {
+                const course = group.course || 0;
+                if (!groupsByCourse[course]) groupsByCourse[course] = [];
+                groupsByCourse[course].push(group);
+            });
+
+            let html = '';
+            const sortedCourses = Object.keys(groupsByCourse).sort((a, b) => a - b);
+
+            sortedCourses.forEach(course => {
+                html += `
+                    <h3 style="margin: 25px 0 15px; color: #001a41;">
+                        ${course} курс
+                        <span style="font-size: 0.85rem; color: #5a6f8c; margin-left: 8px;">
+                            (${groupsByCourse[course].length} групп)
+                        </span>
+                    </h3>
+                    <div class="cards-grid">
+                `;
+
+                groupsByCourse[course].forEach(group => {
+                    const formClass = getFormClass(group.form);
+
+                    html += `
+                        <div class="group-card" data-id="${group.id}" data-name="${group.name}">
+                            <div class="card-header">
+                                <div class="card-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div>
+                                    <div class="card-title">${group.name}</div>
+                                    <div class="card-subtitle">${group.fullName || ''}</div>
+                                </div>
+                            </div>
+                            <div class="card-badges">
+                                <span class="form-badge ${formClass}">${group.form || 'ОФО'}</span>
+                            </div>
+                            <div class="card-footer">
+                                <i class="fas fa-arrow-right"></i> Просмотреть расписание
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div>`;
+            });
+
+            if (contentEl) contentEl.innerHTML = html;
+
+            document.querySelectorAll('.group-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    state.selectedGroupId = card.dataset.id;
+                    state.selectedGroupName = card.dataset.name;
+                    state.scheduleView = 'groupSchedule';
+                    setBackVisibility(true);
+                    updateBreadcrumbs();
+                    renderView();
+                });
+            });
+        }
+
+        // Список преподавателей для расписания
+        function renderTeachersList() {
+            if (!state.teachers || !state.teachers.length) {
+                showEmpty('Нет доступных преподавателей');
+                return;
+            }
+
+            let html = '<div class="cards-grid">';
+            state.teachers.forEach(teacher => {
+                html += `
+                    <div class="teacher-card" data-id="${teacher.id}" data-name="${teacher.fullName}">
+                        <div class="card-header">
+                            <div class="card-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div>
+                                <div class="card-title">${teacher.fullName}</div>
+                                <div class="card-subtitle">${teacher.shortName || ''} | ${teacher.department || ''}</div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <i class="fas fa-arrow-right"></i> Просмотреть расписание
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+
+            if (contentEl) contentEl.innerHTML = html;
+
+            document.querySelectorAll('.teacher-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    state.selectedTeacherId = card.dataset.id;
+                    state.selectedTeacherName = card.dataset.name;
+                    state.scheduleView = 'teacherSchedule';
+                    setBackVisibility(true);
+                    updateBreadcrumbs();
+                    renderView();
+                });
+            });
+        }
+
+        // Расписание группы
+        async function renderGroupSchedule() {
+            if (!contentEl) return;
+            showLoader();
+
+            try {
+                const groupLessons = state.schedule.filter(l => l.groupId === state.selectedGroupId);
+
+                if (!groupLessons.length) {
+                    showEmpty('У группы нет занятий');
+                    return;
+                }
+
+                const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+                const grouped = {};
+
+                groupLessons.forEach(lesson => {
+                    const day = lesson.dayOfWeek || 'Другой';
+                    if (!grouped[day]) grouped[day] = [];
+                    grouped[day].push(lesson);
+                });
+
+                let html = `
+                    <h2 style="color: #001a41; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-users" style="color: #0038a8; font-size: 1.8rem;"></i>
+                        <span>Расписание группы: <strong>${state.selectedGroupName}</strong></span>
+                    </h2>
+                `;
+
+                for (const day of days) {
+                    if (grouped[day]) {
+                        grouped[day].sort((a, b) => (a.pairNumber || 0) - (b.pairNumber || 0));
+
+                        html += `<div class="day-badge"><i class="far fa-calendar-alt"></i> ${day}</div>`;
+                        html += `
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Пара</th>
+                                        <th>Время</th>
+                                        <th>Дисциплина</th>
+                                        <th>Преподаватель</th>
+                                        <th>Аудитория</th>
+                                        <th>Тип</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        for (const lesson of grouped[day]) {
+                            const teacher = state.teachers.find(t => t.id === lesson.teacherId);
+                            const teacherName = teacher ? (teacher.shortName || teacher.fullName) : lesson.teacherId;
+
+                            html += `
+                                <tr>
+                                    <td><strong>${lesson.pairNumber || ''}</strong></td>
+                                    <td>${lesson.time || '—'}</td>
+                                    <td>${lesson.subject || '—'}</td>
+                                    <td>${teacherName}</td>
+                                    <td><span class="badge">${lesson.room || '—'}</span></td>
+                                    <td>${lesson.type || 'лекция'}</td>
+                                </tr>
+                            `;
+                        }
+
+                        html += '</tbody></table>';
+                    }
+                }
+
+                contentEl.innerHTML = html;
+
+            } catch (error) {
+                showError('Ошибка загрузки: ' + error.message);
+            }
+        }
+
+        // Расписание преподавателя
+        async function renderTeacherSchedule() {
+            if (!contentEl) return;
+            showLoader();
+
+            try {
+                const teacherLessons = state.schedule.filter(l => l.teacherId === state.selectedTeacherId);
+
+                if (!teacherLessons.length) {
+                    showEmpty('У преподавателя нет занятий');
+                    return;
+                }
+
+                const days = ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+                const grouped = {};
+
+                teacherLessons.forEach(lesson => {
+                    const day = lesson.dayOfWeek || 'Другой';
+                    if (!grouped[day]) grouped[day] = [];
+                    grouped[day].push(lesson);
+                });
+
+                let html = `
+                    <h2 style="color: #001a41; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-chalkboard-teacher" style="color: #0038a8; font-size: 1.8rem;"></i>
+                        <span>Расписание преподавателя: <strong>${state.selectedTeacherName}</strong></span>
+                    </h2>
+                `;
+
+                for (const day of days) {
+                    if (grouped[day]) {
+                        grouped[day].sort((a, b) => (a.pairNumber || 0) - (b.pairNumber || 0));
+
+                        html += `<div class="day-badge"><i class="far fa-calendar-alt"></i> ${day}</div>`;
+                        html += `
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Пара</th>
+                                        <th>Время</th>
+                                        <th>Дисциплина</th>
+                                        <th>Группа</th>
+                                        <th>Аудитория</th>
+                                        <th>Тип</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                        `;
+
+                        for (const lesson of grouped[day]) {
+                            const group = state.groups.find(g => g.id === lesson.groupId);
+                            const groupName = group ? group.name : lesson.groupId;
+                            const form = group ? group.form : '';
+                            const formClass = getFormClass(form);
+
+                            html += `
+                                <tr>
+                                    <td><strong>${lesson.pairNumber || ''}</strong></td>
+                                    <td>${lesson.time || '—'}</td>
+                                    <td>${lesson.subject || '—'}</td>
+                                    <td>${groupName} <span class="form-badge ${formClass}" style="margin-left: 6px;">${form || 'ОФО'}</span></td>
+                                    <td><span class="badge">${lesson.room || '—'}</span></td>
+                                    <td>${lesson.type || 'лекция'}</td>
+                                </tr>
+                            `;
+                        }
+
+                        html += '</tbody></table>';
+                    }
+                }
+
+                contentEl.innerHTML = html;
+
+            } catch (error) {
+                showError('Ошибка загрузки: ' + error.message);
+            }
+        }
+
+        // Список преподавателей для нагрузки
+        function renderTeacherList() {
+            if (!contentEl) return;
+            
+            const teacherStats = Object.values(state.teacherStats);
+            
+            if (teacherStats.length === 0) {
+                showEmpty('Нет данных о нагрузке');
+                return;
+            }
+
+            let filteredTeachers = teacherStats;
+            
+            if (state.departmentFilter && departmentFilter) {
+                filteredTeachers = filteredTeachers.filter(t => t.department === state.departmentFilter);
+            }
+            
+            if (state.searchTerm) {
+                const term = state.searchTerm.toLowerCase();
+                filteredTeachers = filteredTeachers.filter(t => 
+                    t.teacherName.toLowerCase().includes(term)
+                );
+            }
+
+            filteredTeachers.sort((a, b) => b.totalHours - a.totalHours);
+
+            let html = '<div class="teacher-cards">';
+
+            filteredTeachers.forEach(teacher => {
+                // Используем короткое имя для отображения
+                const shortName = teacher.teacherName.includes(' ') ? 
+                    teacher.teacherName.split(' ').slice(0, 2).join(' ') : 
+                    teacher.teacherName;
+                
+                html += `
+                    <div class="teacher-load-card" data-teacher="${teacher.teacherName}">
+                        <div class="teacher-load-header">
+                            <div class="teacher-load-icon">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                            <div>
+                                <div class="teacher-load-name">${shortName}</div>
+                                <div class="teacher-load-dept">${teacher.department}</div>
+                            </div>
+                        </div>
+                        <div class="teacher-load-stats">
+                            <div class="teacher-load-stat-item">
+                                <div class="teacher-load-stat-value">${teacher.disciplines.size}</div>
+                                <div class="teacher-load-stat-label">дисциплин</div>
+                            </div>
+                            <div class="teacher-load-stat-item">
+                                <div class="teacher-load-stat-value">${teacher.courses.size}</div>
+                                <div class="teacher-load-stat-label">курсов</div>
+                            </div>
+                            <div class="teacher-load-stat-item">
+                                <div class="teacher-load-stat-value">${teacher.records.length}</div>
+                                <div class="teacher-load-stat-label">записей</div>
+                            </div>
+                        </div>
+                        <div class="teacher-load-hours">
+                            <span>Общая нагрузка:</span>
+                            <span>${teacher.totalHours} ч</span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            contentEl.innerHTML = html;
+
+            document.querySelectorAll('.teacher-load-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const teacherName = card.dataset.teacher;
+                    showTeacherDetail(teacherName);
+                });
+            });
+        }
+
+        // Детальная информация о преподавателе
+        function renderTeacherDetail() {
+            if (!contentEl) return;
+            
+            const teacher = state.teacherStats[state.selectedTeacherName];
+            
+            if (!teacher) {
+                showEmpty('Информация не найдена');
+                return;
+            }
+
+            const disciplinesMap = {};
+            teacher.records.forEach(record => {
+                const discipline = record.discipline || 'Без названия';
+                if (!disciplinesMap[discipline]) {
+                    disciplinesMap[discipline] = {
+                        name: discipline,
+                        hours: 0,
+                        lectures: 0,
+                        seminars: 0,
+                        groups: new Set(),
+                        records: []
+                    };
+                }
+                disciplinesMap[discipline].hours += record.hours || 0;
+                disciplinesMap[discipline].lectures += record.lectures || 0;
+                disciplinesMap[discipline].seminars += record.seminars || 0;
+                if (record.course) {
+                    disciplinesMap[discipline].groups.add(record.course);
+                }
+                disciplinesMap[discipline].records.push(record);
+            });
+
+            const disciplines = Object.values(disciplinesMap).sort((a, b) => b.hours - a.hours);
+
+            let html = `
+                <div class="teacher-detail-card">
+                    <div class="teacher-detail-header">
+                        <div class="teacher-detail-avatar">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                        <div class="teacher-detail-info">
+                            <h2>${teacher.teacherName}</h2>
+                            <p>${teacher.department}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="teacher-detail-stats">
+                        <div class="teacher-detail-stat">
+                            <div class="teacher-detail-stat-value">${teacher.totalHours}</div>
+                            <div class="teacher-detail-stat-label">Всего часов</div>
+                        </div>
+                        <div class="teacher-detail-stat">
+                            <div class="teacher-detail-stat-value">${teacher.lectures}</div>
+                            <div class="teacher-detail-stat-label">Лекции</div>
+                        </div>
+                        <div class="teacher-detail-stat">
+                            <div class="teacher-detail-stat-value">${teacher.seminars}</div>
+                            <div class="teacher-detail-stat-label">Семинары</div>
+                        </div>
+                        <div class="teacher-detail-stat">
+                            <div class="teacher-detail-stat-value">${teacher.disciplines.size}</div>
+                            <div class="teacher-detail-stat-label">Дисциплин</div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin: 20px 0 12px; color: #001a41;">Дисциплины</h3>
+                    <div class="discipline-list">
+            `;
+
+            disciplines.forEach(discipline => {
+                html += `
+                    <div class="discipline-item">
+                        <div class="discipline-info">
+                            <h4>${discipline.name}</h4>
+                            <p>Группы: ${Array.from(discipline.groups).join(', ') || '—'}</p>
+                        </div>
+                        <div class="discipline-hours">${discipline.hours} ч</div>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            contentEl.innerHTML = html;
+        }
+
+        // Статистика с графиками
+        function renderStatistics() {
+            if (!contentEl) return;
+            showLoader();
+
+            setTimeout(() => {
+                const topTeachers = Object.values(state.teacherStats)
+                    .sort((a, b) => b.totalHours - a.totalHours)
+                    .slice(0, 10);
+
+                const departmentStats = {};
+                Object.values(state.teacherStats).forEach(teacher => {
+                    if (teacher.department) {
+                        if (!departmentStats[teacher.department]) {
+                            departmentStats[teacher.department] = 0;
+                        }
+                        departmentStats[teacher.department] += teacher.totalHours;
+                    }
+                });
+
+                const typeStats = {
+                    lectures: state.load.reduce((sum, i) => sum + (i.lectures || 0), 0),
+                    seminars: state.load.reduce((sum, i) => sum + (i.seminars || 0), 0)
+                };
+
+                let html = `
+                    <div class="table-container">
+                        <h2 style="margin-bottom: 15px; color: #001a41;">
+                            <i class="fas fa-chart-line" style="color: #0038a8; margin-right: 8px;"></i>
+                            Аналитика учебной нагрузки
+                        </h2>
+                        
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-file-alt"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4>Всего записей</h4>
+                                    <span class="stat-value">${state.load.length}</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4>Всего часов</h4>
+                                    <span class="stat-value">${state.load.reduce((sum, i) => sum + (i.hours || 0), 0)}</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-chalkboard"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4>Лекции</h4>
+                                    <span class="stat-value">${typeStats.lectures}</span>
+                                </div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-icon">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h4>Семинары</h4>
+                                    <span class="stat-value">${typeStats.seminars}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="charts-grid">
+                            <div class="chart-container">
+                                <h3>Топ-10 преподавателей по нагрузке</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="teacherChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="chart-container">
+                                <h3>Распределение по кафедрам</h3>
+                                <div class="chart-wrapper">
+                                    <canvas id="departmentChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h3 style="margin: 25px 0 15px;">Детальная статистика по преподавателям</h3>
+                        <div style="background: #f8faff; padding: 18px; border-radius: 18px;">
+                            ${topTeachers.map((teacher, i) => `
+                                <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #e8edf5;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="font-weight: 700; color: #0038a8;">${i+1}.</span>
+                                        <span style="font-weight: 600;">${teacher.teacherName}</span>
+                                        <span class="badge">${teacher.disciplines.size} дисциплин</span>
+                                    </div>
+                                    <div style="display: flex; gap: 15px;">
+                                        <span><i class="fas fa-chalkboard" style="color: #0038a8;"></i> ${teacher.lectures}</span>
+                                        <span><i class="fas fa-users" style="color: #0038a8;"></i> ${teacher.seminars}</span>
+                                        <span style="font-weight: 700; color: #0038a8;">${teacher.totalHours} ч</span>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+
+                contentEl.innerHTML = html;
+
+                // Создаем графики
+                setTimeout(() => {
+                    createTeacherChart(topTeachers);
+                    createDepartmentChart(departmentStats);
+                }, 100);
+
+            }, 500);
+        }
+
+        // График преподавателей
+        function createTeacherChart(data) {
+            const canvas = document.getElementById('teacherChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(item => {
+                        const parts = item.teacherName.split(' ');
+                        return parts.length > 1 ? parts[0] + ' ' + parts[1][0] + '.' : item.teacherName;
+                    }),
+                    datasets: [{
+                        label: 'Часов',
+                        data: data.map(item => item.totalHours),
+                        backgroundColor: '#0038a8',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e8edf5' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // График кафедр
+        function createDepartmentChart(data) {
+            const canvas = document.getElementById('departmentChart');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
+
+            const sortedData = Object.entries(data)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8);
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: sortedData.map(item => item[0]),
+                    datasets: [{
+                        data: sortedData.map(item => item[1]),
+                        backgroundColor: [
+                            '#0038a8',
+                            '#e41e26',
+                            '#f39c12',
+                            '#27ae60',
+                            '#9b59b6',
+                            '#3498db',
+                            '#e67e22',
+                            '#1abc9c'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right' }
+                    }
+                }
+            });
+        }
+
+        // Функции для навигации
+        function updateBreadcrumbs() {
+            if (!breadcrumbsEl) return;
+            
+            let html = '<button id="homeBtn"><i class="fas fa-home"></i> Главная</button>';
+            
+            if (state.currentView === 'schedule') {
+                if (state.scheduleView === 'groupSchedule' && state.selectedGroupName) {
+                    html += `<span><i class="fas fa-chevron-right"></i></span><span>${state.selectedGroupName}</span>`;
+                } else if (state.scheduleView === 'teacherSchedule' && state.selectedTeacherName) {
+                    html += `<span><i class="fas fa-chevron-right"></i></span><span>${state.selectedTeacherName}</span>`;
+                }
+            } else if (state.currentView === 'load') {
+                if (state.loadView === 'teacherDetail' && state.selectedTeacherName) {
+                    html += `<span><i class="fas fa-chevron-right"></i></span><span>${state.selectedTeacherName}</span>`;
+                } else {
+                    html += `<span><i class="fas fa-chevron-right"></i></span><span>Учебная нагрузка</span>`;
+                }
+            } else if (state.currentView === 'statistics') {
+                html += `<span><i class="fas fa-chevron-right"></i></span><span>Аналитика</span>`;
+            }
+            
+            breadcrumbsEl.innerHTML = html;
+            const homeBtnEl = document.getElementById('homeBtn');
+            if (homeBtnEl) homeBtnEl.addEventListener('click', goHome);
+        }
+
+        function setBackVisibility(visible) {
+            if (backBtn) {
+                backBtn.style.visibility = visible ? 'visible' : 'hidden';
+            }
+        }
+
+        function goHome() {
+            if (state.currentView === 'schedule') {
+                state.scheduleView = 'list';
+                state.selectedGroupId = null;
+                state.selectedGroupName = '';
+                state.selectedTeacherId = null;
+                state.selectedTeacherName = '';
+                setBackVisibility(false);
+            } else if (state.currentView === 'load') {
+                state.loadView = 'teachers';
+                state.selectedTeacherId = null;
+                state.selectedTeacherName = null;
+                setBackVisibility(false);
+            } else {
+                setView('schedule');
+            }
+            updateBreadcrumbs();
+            renderView();
+        }
+
+        function setView(view) {
+            state.currentView = view;
+            
+            menuCards.forEach(card => {
+                if (card.dataset.view === view) {
+                    card.classList.add('active');
+                } else {
+                    card.classList.remove('active');
+                }
+            });
+
+            if (roleTabs) roleTabs.style.display = view === 'schedule' ? 'flex' : 'none';
+            if (controlPanel) controlPanel.style.display = view === 'schedule' ? 'flex' : 'none';
+            if (courseFilters) courseFilters.style.display = view === 'schedule' && state.currentRole === 'student' ? 'block' : 'none';
+            if (loadFilters) loadFilters.style.display = view === 'load' && state.loadView === 'teachers' ? 'flex' : 'none';
+            
+            if (view === 'schedule') {
+                state.scheduleView = 'list';
+                state.selectedGroupId = null;
+                state.selectedGroupName = '';
+                state.selectedTeacherId = null;
+                state.selectedTeacherName = '';
+                setBackVisibility(false);
+            } else if (view === 'load') {
+                state.loadView = 'teachers';
+                state.selectedTeacherId = null;
+                state.selectedTeacherName = null;
+                setBackVisibility(false);
+            } else {
+                setBackVisibility(true);
+            }
+            
+            updateBreadcrumbs();
+            applyFilters();
+            renderView();
+        }
+
+        function setRole(role) {
+            state.currentRole = role;
+            state.scheduleView = 'list';
+            state.selectedGroupId = null;
+            state.selectedGroupName = '';
+            state.selectedTeacherId = null;
+            state.selectedTeacherName = '';
+            
+            document.querySelectorAll('.role-btn').forEach(btn => {
+                if (btn.dataset.role === role) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            if (courseFilters) courseFilters.style.display = role === 'student' ? 'block' : 'none';
+            
+            setBackVisibility(false);
+            applyFilters();
+            renderView();
+        }
+
+        function showTeacherDetail(teacherName) {
+            state.loadView = 'teacherDetail';
+            state.selectedTeacherName = teacherName;
+            const teacherStat = state.teacherStats[teacherName];
+            if (teacherStat && teacherStat.teacherId) {
+                state.selectedTeacherId = teacherStat.teacherId;
+            }
+            setBackVisibility(true);
+            updateBreadcrumbs();
+            renderView();
+        }
+
+        // Обработчики фильтров
+        if (courseButtons) {
+            courseButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    courseButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.courseFilter = btn.dataset.course;
+                    applyFilters();
+                    renderView();
+                });
+            });
+        }
+
+        if (formButtons) {
+            formButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    formButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    state.formFilter = btn.dataset.form;
+                    applyFilters();
+                    renderView();
+                });
+            });
+        }
+
+        if (departmentFilter) {
+            departmentFilter.addEventListener('change', (e) => {
+                state.departmentFilter = e.target.value;
+                renderView();
+            });
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                state.searchTerm = e.target.value;
+                renderView();
+            });
+        }
+
+        // Обработчики для окон
+        if (combinePairsBtn) {
+            combinePairsBtn.addEventListener('click', () => {
+                const firstSelect = document.getElementById('firstPairSelect');
+                const secondSelect = document.getElementById('secondPairSelect');
+                
+                if (firstSelect && secondSelect) {
+                    firstSelect.innerHTML = '<option value="">Выберите пару</option>';
+                    secondSelect.innerHTML = '<option value="">Выберите пару</option>';
+                    
+                    state.schedule.forEach((pair) => {
+                        const option = `<option value="${pair.id}">${pair.dayOfWeek} ${pair.pairNumber}п: ${pair.subject}</option>`;
+                        firstSelect.innerHTML += option;
+                        secondSelect.innerHTML += option;
+                    });
+                }
+                
+                if (combineModal) combineModal.classList.add('active');
+            });
+        }
+
+        if (teacherWindowsBtn) {
+            teacherWindowsBtn.addEventListener('click', () => {
+                alert('Функция "Окна преподавателей" в разработке');
+            });
+        }
+
+        if (addWindowBtn) {
+            addWindowBtn.addEventListener('click', () => {
+                const teacherSelect = document.getElementById('windowTeacherSelect');
+                if (teacherSelect) {
+                    teacherSelect.innerHTML = '<option value="">Выберите преподавателя</option>';
+                    
+                    Object.values(state.teacherStats).forEach(teacher => {
+                        teacherSelect.innerHTML += `<option value="${teacher.teacherName}">${teacher.teacherName}</option>`;
+                    });
+                }
+                
+                if (windowModal) windowModal.classList.add('active');
+            });
+        }
+
+        const combineCancelBtn = document.getElementById('combineCancelBtn');
+        if (combineCancelBtn) {
+            combineCancelBtn.addEventListener('click', () => {
+                if (combineModal) combineModal.classList.remove('active');
+            });
+        }
+
+        const windowCancelBtn = document.getElementById('windowCancelBtn');
+        if (windowCancelBtn) {
+            windowCancelBtn.addEventListener('click', () => {
+                if (windowModal) windowModal.classList.remove('active');
+            });
+        }
+
+        const combineSaveBtn = document.getElementById('combineSaveBtn');
+        if (combineSaveBtn) {
+            combineSaveBtn.addEventListener('click', async () => {
+                const firstPair = document.getElementById('firstPairSelect')?.value;
+                const secondPair = document.getElementById('secondPairSelect')?.value;
+                
+                if (!firstPair || !secondPair) {
+                    alert('Выберите обе пары');
+                    return;
+                }
+                
+                alert('Функция совмещения пар в разработке');
+                if (combineModal) combineModal.classList.remove('active');
+            });
+        }
+
+        const windowSaveBtn = document.getElementById('windowSaveBtn');
+        if (windowSaveBtn) {
+            windowSaveBtn.addEventListener('click', async () => {
+                const teacher = document.getElementById('windowTeacherSelect')?.value;
+                const day = document.getElementById('windowDaySelect')?.value;
+                const pair = document.getElementById('windowPairSelect')?.value;
+                
+                if (!teacher || !day || !pair) {
+                    alert('Заполните все поля');
+                    return;
+                }
+                
+                alert('Функция добавления окон в разработке');
+                if (windowModal) windowModal.classList.remove('active');
+            });
+        }
+
+        // Закрытие модальных окон по клику вне
+        window.addEventListener('click', (e) => {
+            if (e.target === combineModal) {
+                combineModal.classList.remove('active');
+            }
+            if (e.target === windowModal) {
+                windowModal.classList.remove('active');
+            }
+        });
+
+        // Управление меню
+        menuCards.forEach(card => {
+            card.addEventListener('click', () => {
+                setView(card.dataset.view);
+            });
+        });
+
+        // Ролевые кнопки
+        document.querySelectorAll('.role-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                setRole(btn.dataset.role);
+            });
+        });
+
+        if (homeBtn) homeBtn.addEventListener('click', goHome);
+        if (backBtn) backBtn.addEventListener('click', goHome);
+    </script>
+</body>
+</html>
